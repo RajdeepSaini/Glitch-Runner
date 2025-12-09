@@ -1,0 +1,5 @@
+{
+  "name": "Glitch Runner",
+  "description": "A cyberpunk infinite runner where you jump over firewalls and slide under corrupted data. Features a custom game engine and glitch aesthetics.",
+  "requestFramePermissions": []
+}

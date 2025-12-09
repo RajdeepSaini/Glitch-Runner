@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+    <title>Glitch Runner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+      body {
+        background-color: #050505;
+        font-family: 'Share Tech Mono', monospace;
+        overflow: hidden;
+        user-select: none;
+        /* Custom Cursor: Cyan Crosshair */
+        cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 4V8M12 16V20M4 12H8M16 12H20M12 12H12.01" stroke="%2322d3ee" stroke-width="2" stroke-linecap="round"/></svg>') 12 12, crosshair;
+      }
+
+      button, a, [role="button"] {
+        /* Hover Cursor: Magenta Target */
+        cursor: url('data:image/svg+xml;utf8,<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="4" width="16" height="16" stroke="%23d946ef" stroke-width="2"/><path d="M12 2V22M2 12H22" stroke="%23d946ef" stroke-width="1"/></svg>') 12 12, pointer;
+      }
+
+      ::selection {
+        background: #22d3ee; /* Cyan */
+        color: #000;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #020617; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #1e293b; 
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #334155; 
+      }
+
+      /* CRT Scanline Effect */
+      .scanlines {
+        background: linear-gradient(
+          to bottom,
+          rgba(255,255,255,0),
+          rgba(255,255,255,0) 50%,
+          rgba(0,0,0,0.2) 50%,
+          rgba(0,0,0,0.2)
+        );
+        background-size: 100% 4px;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 50;
+      }
+
+      /* Glitch Animation Keyframes */
+      @keyframes glitch-skew {
+        0% { transform: skew(0deg); }
+        10% { transform: skew(-2deg); }
+        20% { transform: skew(2deg); }
+        30% { transform: skew(0deg); }
+        100% { transform: skew(0deg); }
+      }
+
+      @keyframes glitch-anim-1 {
+        0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+        20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+        40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
+        60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+        80% { clip-path: inset(10% 0 60% 0); transform: translate(-1px, 1px); }
+        100% { clip-path: inset(30% 0 70% 0); transform: translate(1px, -1px); }
+      }
+
+      @keyframes glitch-anim-2 {
+        0% { clip-path: inset(10% 0 60% 0); transform: translate(2px, -1px); }
+        20% { clip-path: inset(80% 0 5% 0); transform: translate(-2px, 2px); }
+        40% { clip-path: inset(30% 0 20% 0); transform: translate(2px, 1px); }
+        60% { clip-path: inset(10% 0 80% 0); transform: translate(-2px, -2px); }
+        80% { clip-path: inset(50% 0 30% 0); transform: translate(1px, 2px); }
+        100% { clip-path: inset(70% 0 10% 0); transform: translate(-1px, -1px); }
+      }
+
+      .glitch-text {
+        position: relative;
+        display: inline-block;
+      }
+
+      .glitch-text::before,
+      .glitch-text::after {
+        content: attr(data-text);
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #050505; 
+      }
+
+      .glitch-text::before {
+        left: 2px;
+        text-shadow: -1px 0 #ff00ff;
+        clip-path: inset(0 0 0 0);
+        animation: glitch-anim-1 2s infinite linear alternate-reverse;
+      }
+
+      .glitch-text::after {
+        left: -2px;
+        text-shadow: -1px 0 #00ffff;
+        clip-path: inset(0 0 0 0);
+        animation: glitch-anim-2 3s infinite linear alternate-reverse;
+      }
+      
+      /* Grid Animation */
+      @keyframes grid-move {
+        0% { background-position: 0 0; }
+        100% { background-position: -40px 0; }
+      }
+      
+      .moving-grid {
+        background-size: 40px 40px;
+        background-image:
+          linear-gradient(to right, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 0, 255, 0.1) 1px, transparent 1px);
+        animation: grid-move 1s linear infinite;
+      }
+
+      /* Utility for angled corners */
+      .clip-angled {
+        clip-path: polygon(
+          10px 0, 100% 0, 
+          100% calc(100% - 10px), calc(100% - 10px) 100%, 
+          0 100%, 0 10px
+        );
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <div class="scanlines"></div>
+  </body>
+</html>
